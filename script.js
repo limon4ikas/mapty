@@ -11,9 +11,45 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 
-/* ========== USING THE GEOLOCATION API ========== */
+/* ========== ACTIVITY ========== */
 
-let map, mapEvent;
+class Activity {
+  date = new Date();
+  id = (Date.now() + '').slice(-10); // Use library
+
+  constructor(coords, distance, duration) {
+    this.coords = coords; // [lat, lng]
+    this.distance = distance; // in km
+    this.duration = duration; // in min
+  }
+}
+
+class Running extends Activity {
+  constructor(coords, distance, duration, cadence) {
+    super(coords, distance, duration);
+    this.cadence = cadence;
+    this.calcPace();
+  }
+
+  calcPace() {
+    this.pace = this.duration / this.distance;
+    return this.pace;
+  }
+}
+class Cycling extends Activity {
+  constructor(coords, distance, duration, elevationGain) {
+    super(coords, distance, duration);
+    this.elevationGain = elevationGain;
+    this.calcSpeed();
+  }
+
+  calcSpeed() {
+    this.speed = this.distance / (this.duration / 60);
+    return this.speed;
+  }
+}
+
+/* ========== APPLICATION ========== */
 
 class App {
   #map;
@@ -36,6 +72,7 @@ class App {
       );
     }
   }
+
   _loadMap(position) {
     const { latitude, longitude } = position.coords;
     const userCoords = [latitude, longitude];
@@ -50,6 +87,7 @@ class App {
     // Event listener on map
     this.#map.on('click', this._showForm.bind(this));
   }
+
   _showForm(mapE) {
     this.#mapEvent = mapE;
     form.classList.remove('hidden');
