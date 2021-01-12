@@ -27,7 +27,7 @@ class Activity {
 class Running extends Activity {
   constructor(coords, distance, duration, cadence) {
     super(coords, distance, duration);
-    this.cadence = cadence;
+    this.cadence = cadence; // in spm
     this.calcPace();
   }
 
@@ -124,3 +124,4 @@ class App {
 
 const app = new App();
 console.log(app);
+console.log(app.prototype);
