@@ -73,10 +73,14 @@ class App {
   #activities = [];
 
   constructor() {
+    // Get user's position
     this._getPosition();
 
+    //Get data from local storage
+    this._getLocalStorage();
+
     // Event listeners
-    form.addEventListener('submit', this._newWorkout.bind(this));
+    form.addEventListener('submit', this._createActivity.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
@@ -106,6 +110,10 @@ class App {
 
     // Event listener on map
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#activities.forEach(activity => {
+      this._renderActivityMarker(activity);
+    });
   }
 
   _moveToPopup(e) {
@@ -122,8 +130,7 @@ class App {
       pan: { duration: 1 },
     });
 
-    activity.click();
-    console.log(activity);
+    // activity.click();
   }
 
   // Form
@@ -149,7 +156,7 @@ class App {
   }
 
   // Create activity
-  _newWorkout(e) {
+  _createActivity(e) {
     const validInputs = (...inputs) =>
       inputs.every(inp => Number.isFinite(inp));
     const allPositive = (...inputs) => inputs.every(inp => inp > 0);
@@ -192,13 +199,14 @@ class App {
 
     // Add new object to workout array
     this.#activities.push(activity);
-    console.log(app);
-    console.log(activity);
 
     // Render
     this._renderActivityMarker(activity);
     this._renderActivity(activity);
     this._hideForm();
+
+    // Set local storage to all activities
+    this._setLocalStorage();
   }
 
   // Display
@@ -266,6 +274,23 @@ class App {
 </li>`;
 
     form.insertAdjacentHTML('afterend', html);
+  }
+
+  // Storage
+  _setLocalStorage() {
+    localStorage.setItem('activities', JSON.stringify(this.#activities));
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('activities'));
+
+    if (!data) return;
+
+    this.#activities = data;
+
+    this.#activities.forEach(activity => {
+      this._renderActivity(activity);
+    });
   }
 }
 
