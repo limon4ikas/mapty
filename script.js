@@ -292,6 +292,11 @@ class App {
       this._renderActivity(activity);
     });
   }
+
+  reset() {
+    localStorage.removeItem('activities');
+    location.reload();
+  }
 }
 
 const app = new App();
