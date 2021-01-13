@@ -5,6 +5,7 @@
 class Activity {
   date = new Date();
   id = (Date.now() + '').slice(-10); // Use library
+  clicks = 0;
 
   constructor(coords, distance, duration) {
     this.coords = coords; // [lat, lng]
@@ -19,6 +20,10 @@ class Activity {
     this.description = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${
       months[this.date.getMonth()]
     } ${this.date.getDate()}`;
+  }
+
+  click() {
+    this.clicks++;
   }
 }
 
@@ -63,6 +68,7 @@ const inputElevation = document.querySelector('.form__input--elevation');
 
 class App {
   #map;
+  #mapZoomLevel = 13;
   #mapEvent;
   #activities = [];
 
@@ -72,8 +78,10 @@ class App {
     // Event listeners
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
+    containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
 
+  // Map
   _getPosition() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -90,7 +98,7 @@ class App {
     const userCoords = [latitude, longitude];
 
     // Map
-    this.#map = L.map('map').setView(userCoords, 13);
+    this.#map = L.map('map').setView(userCoords, this.#mapZoomLevel);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -100,6 +108,25 @@ class App {
     this.#map.on('click', this._showForm.bind(this));
   }
 
+  _moveToPopup(e) {
+    const activityEl = e.target.closest('.workout');
+
+    if (!activityEl) return;
+
+    const activity = this.#activities.find(
+      activity => activity.id === activityEl.dataset.id
+    );
+
+    this.#map.setView(activity.coords, this.#mapZoomLevel, {
+      animate: true,
+      pan: { duration: 1 },
+    });
+
+    activity.click();
+    console.log(activity);
+  }
+
+  // Form
   _showForm(mapE) {
     this.#mapEvent = mapE;
     form.classList.remove('hidden');
@@ -121,6 +148,7 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
 
+  // Create activity
   _newWorkout(e) {
     const validInputs = (...inputs) =>
       inputs.every(inp => Number.isFinite(inp));
@@ -173,6 +201,7 @@ class App {
     this._hideForm();
   }
 
+  // Display
   _renderActivityMarker(activity) {
     L.marker(activity.coords)
       .addTo(this.#map)
@@ -191,7 +220,6 @@ class App {
       .openPopup();
   }
 
-  // Render workout on list
   _renderActivity(activity) {
     let html = `
   <li class="workout workout--${activity.type}" data-id="${activity.id}">
